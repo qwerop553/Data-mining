@@ -22,7 +22,8 @@ fitTree <- rpart(formula = PersonalLoan ~ ., data = bank)
 print(fitTree)
 plot(fitTree)
 text(fitTree)
-prp(fitTree, type=4, extra=2, digits=3)
+prp(fitTree, type=4, extra=8, digits=3)
+
 
 # 평가
 predlmsi <- predict(object = fitTree, newdata = bank, type = 'class') # 0, 1의 값을 원함
