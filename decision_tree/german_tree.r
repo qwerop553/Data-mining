@@ -3,13 +3,13 @@ credit <- read.csv("german.csv")
 
 head(credit)
 
-names(credit)[1] <- "checking_bala/nce"
+names(credit)[1] <- "checking_balance"
 table(credit$checking_balance)
 
 table(credit$default)
 prop.table(table(credit$default))
 
-set.seed(123) # 같은 PC에서 동일한 난수를 생성
+set.seed(1234) # 같은 PC에서 동일한 난수를 생성
 train_sample <- sample(1000, 900)
 
 str(train_sample)
@@ -58,7 +58,9 @@ CrossTable(test$default, test$p)
 # 돈을 갚을 사람에게 돈을 빌려주지 않았을 때 발생하는 손실보다 훨씬 더 크다.
 
 # 비용을 정의하여 준다
-#
+# 
+# 비용 테이블을 예측과 정답의 위치를 바꾸어서 만들어야 한다
+# 
 #          정답_no     정답_yes
 # 예측_no      0             4
 # 예측_yes     1             0
@@ -67,12 +69,50 @@ CrossTable(test$default, test$p)
 matrix_dimensions <- list(c("no", "yes"), c("no", "yes")); names(matrix_dimensions) <- c("predicted", "actual");
 cost <- matrix(c(0, 1, 4, 0), nrow = 2, dimnames = matrix_dimensions)
 cost
-
+'
+> cost
+       answer
+predict yes no
+    yes   0  1
+    no    4  0
+ yes이지만 no라고 분류되는 에러에 no 이나 yes라고 분류되는 에러보다 4배의 가중치를 부여
+'
 # 간단하게
-cost <- matrix(c(0, 1, 4, 0), nrow=2); 
-colnames(cost) <- rownames(cost) <- c("no", "yes");
+# cost <- matrix(c(0, 1, 4, 0), nrow=2); 
+# colnames(cost) <- rownames(cost) <- c("no", "yes");
 
-cost_model <- C5.0(train[-21], as.factor(train$default), costs=cost)
+
+cost_model <- C5.0(train[-21], factor(train$default, levels=c(1, 2), labels=c("no", "yes")), costs=cost)
+
 summary(cost_model)
+'
+      Decision Tree
+          -----------------------
+          Size      Errors   Cost
+
+            34  253(28.1%)   0.30   <<
+
+
+           (a)   (b)    <-classified as
+          ----  ----
+           391   247    (a): class no
+             6   256    (b): class yes
+'
+
+
+summary(m)
+'
+ Decision Tree
+          ----------------
+          Size      Errors
+
+            54  129(14.3%)   <<
+
+
+           (a)   (b)    <-classified as
+          ----  ----
+           592    46    (a): class 1
+            83   179    (b): class 2
+'
 
 
