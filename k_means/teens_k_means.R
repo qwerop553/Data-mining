@@ -20,7 +20,7 @@ teens$age <- ifelse(teens$age >= 13 &teens$age < 20, teens$age, NA)
 summary(teens$age)
 
 
-# 더미 변수
+## 더미 변수
 #
 # 알고리즘에 따라서는 수치형 변수만을 받는 경우가 있음
 #
@@ -28,25 +28,30 @@ summary(teens$age)
 # 평균을 구해서 centroid를 구하기 때문에 산술연산이 가능한
 # 수치형 변수를 사용해야 함
 # 
-# 명목형 변수를 수치로 변경해서 사용하게 되면
+# 명목형 변수를 수치로 변경해서 할 때를 가정해 보자
 #
-# 즉 나이를 노인/중년/청년으로 나타내는 변수를 2/1/0 으로 사용하게 되면
-# 숫자가 연산이 되면서 centroid 1.5 이런 수치가 나오는데, 이 값은
-# 의미를 가지지 못함(중년스러운 노인?)
+# 남성을 0, 여성을 1, NA인 성별을 2로 바꿔서 사용한다면,
+# 최종 cluster의 결과로 1.7 등의 값이 나왔을 때
+# 적절히 해석하기가 어렵다
 #
-# 그래서 명목형 변수는 값의 수준별로 따로따로 변수를 생성
-# 그렇게 해서 생긴 변수는 1, 0 이 값만을 가지는데 이를 더미변수라고 함
+# 그래서 위와 같은 명목형 변수는 값의 수준별로 새로운 변수를 생성한다. 
+# 컬럼 두 개를 새로 만들어서,
+# 첫 번째 컬럼은 남성일 때 0, 여성일 때 1 등의 처리를 해준다
 #
-# 더미변수는 연산이 가능한데, '노인'변수에서 연산을 통해 0.7이나오면
-# 0.7 퍼센트가 노인이다 라는 의미로 사용할 수 있음
+# 이렇게 1, 0  값만을 가지는 이런 변수들을 더미변수라고 한다
 #
-# 주의할것 -> ifelse 는 값 자체가 없을 때 test 가 안된다 !
-# teens$gender <- ifelse(teens$gender == "F" , ..) 를 사용하면
-# NA 값이 있는 곳에서는 그냥 NA 값이 들어간다.
+# 더미변수는 해석이 가능한데, cluster의 남성값이 0.7이 나온다면
+# 이 클러스터에는 남성이 70% 속해 있다고 해석할 수 있다.
+# 더미 변수를 생성해 보자
 
 teens$female <- ifelse(!is.na(teens$gender) & teens$gender == "F", 1, 0)
 teens$male <- ifelse(!is.na(teens$gender) & teens$gender == "M", 1, 0)
 teens$no_gender <- ifelse(is.na(teens$gender), 1, 0)
+
+##
+# 주의할것 -> ifelse 는 값 자체가 없을 때 test 가 안된다 !
+# teens$gender <- ifelse(teens$gender == "F" , ..) 를 사용하면
+# NA 값이 있는 곳에서는 그냥 NA 값이 들어간다.
 
 # 확인 
 table(teens$female);table(teens$male);table(teens$no_gender);
@@ -63,42 +68,48 @@ teens$age_fl <- floor(teens$age)
 table(teens$age_fl, teens$gender)
 table(teens$age_fl, teens$gender, useNA='ifany')
 
-# 졸업 연도별 평균나이
-teens %>% group_by(gradyear) %>% summarize(me=mean(age, na.rm=T))
-aggregate(age~gradyear, teens, FUN = function(x) mean(x, na.rm=T))
-aggregate(age~gradyear, teens, mean, na.rm=T)
-aggregate(age~gradyear, teens, mean)
 
 #
 # 연령 결측치 처리
 # 졸엽년도가 같은 사람들의 나이로 대체
 #
 # gradyear 별로 age의 mean 값을 구한다.
-# ave: 그룹의 대표값을 형성하는 함수
-# ave: 그룹의 대표값을 구할 특성, 그룹, 대표값을 어떤 통계로 할건지)
-# 원본데이터의 차원을 그대로 유지
-# 즉 age가 1000개의 값을 들어오면 ave_age도 1000개의 값을 생성
-# ave(teens$age, teens$gradyear, FUN=function(x) mean(x, na.rm = TRUE))
+#
 
 # 졸업 연도의 결측치 확인
 table(teens$gradyear, useNA='ifany') # 없음
 
+# 졸업 연도별 평균나이
+teens %>% group_by(gradyear) %>% summarize(me=mean(age, na.rm=T), sd=sd(age, na.rm=T))
+aggregate(age~gradyear, teens, FUN = function(x) c(mean(x, na.rm=T), sd(x, na.rm=T)))
+aggregate(age~gradyear, teens, mean, na.rm=T)
+aggregate(age~gradyear, teens, mean) # na.rm=T 가 default로 들어가 있다
+
+## ave
+# ave: 그룹의 대표값을 형성하는 함수
+# ave(그룹의 대표값을 구할 특성, 그룹, 대표값을 어떤 통계로 할건지)
+# 원본데이터의 차원을 그대로 유지
+# 즉 age가 1000개의 값을 들어오면 ave_age도 1000개의 값을 생성
+# ave(teens$age, teens$gradyear, FUN=function(x) mean(x, na.rm = TRUE))
+
 # 연령 결측치 처리코드
 table(teens$age, useNA='ifany')
 ave_age <- ave(teens$age, teens$gradyear, FUN=function(x) mean(x, na.rm = TRUE)) 
+
 # mean의 옵션을 주기 위해 FUN 인자로 mean을 전달 
 table(ave_age) #넣기 전에 확인 
 teens$age <- ifelse(is.na(teens$age), ave_age, teens$age)
 
 # 스케일 조정
 #
-# => 데이터를 정규화시켜줌
-# 극과 극의 관계.. x가 (0~100)값을 갖고,  y가 (0~1)의 값을 갖는다면,
-# 0과 100ㅔ 비해 0 과 1이 단순히 유클리디언 디스턴스로 계산을 하면,
-# 스케일이 큰 쪽(값의 범위가 큰 쪽으로)의 영향을 훨씬 크게 받기 때문에,
-# 스케일을 조정하여 비슷하게 만들어줘야 합니다.
-# ex) 몸무게 10kg, 키 150, 160.. 
+# 데이터를 정규화시켜주는 것
+# 두 변수 x, y를 사용할 것인데
+# x가 (0~100)값을 갖고,  y가 (0~1)의 값을 갖는다면,
+# 유클리디언 디스턴스로 유사성과 이질성을 판단하기 때문에,
+# 스케일이 큰(값의 범위가 큰) x가 y에 비해 훨씬 큰 영향을 미친다
 #
+# 따라서 적절하게 조정해줘야 한다
+#  
 # 정규화 방법
 # Xs = (X - mean) / s.d => 정규분포를 가정하고, 표준정규분포를 따르도록 정규화함
 # Xs = (X - mean) / (max - min) => 모든 값을 -0.5, 0.5 사이의 값으로 정규화
@@ -109,8 +120,8 @@ teens$age <- ifelse(is.na(teens$age), ave_age, teens$age)
 #
 
 interests <- teens[5:40]
-interests_z <- as.data.frame(lapply(interests, scale))
-
+interests_z <- as.data.frame(lapply(interests, scale)) # 표준정규분포화 시켜준다
+interests_z
 set.seed(1234)
 teen_clusters <- kmeans(interests_z, 5)
 
