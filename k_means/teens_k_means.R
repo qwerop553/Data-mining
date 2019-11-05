@@ -100,7 +100,7 @@ ave_age <- ave(teens$age, teens$gradyear, FUN=function(x) mean(x, na.rm = TRUE))
 table(ave_age) #넣기 전에 확인 
 teens$age <- ifelse(is.na(teens$age), ave_age, teens$age)
 
-# 스케일 조정
+## 스케일 조정
 #
 # 데이터를 정규화시켜주는 것
 # 두 변수 x, y를 사용할 것인데
@@ -110,16 +110,34 @@ teens$age <- ifelse(is.na(teens$age), ave_age, teens$age)
 #
 # 따라서 적절하게 조정해줘야 한다
 #  
-# 정규화 방법
+## 정규화 방법
+#
+# 표준정규분포 정규화
 # Xs = (X - mean) / s.d => 정규분포를 가정하고, 표준정규분포를 따르도록 정규화함
+# 데이터가 몰려 있는 느낌은 살릴 수 없음
+# 
+# 특정 범위 내 정규화
 # Xs = (X - mean) / (max - min) => 모든 값을 -0.5, 0.5 사이의 값으로 정규화
 # Xs = (X - min)  / (max - min) => 모든 값을 0, 1 사이의 값으로 정규화함
+# 데이터가 몰려 있는 느낌을 살릴 수 있음
 #
-# 첫번째는 이상치를 가지고 있을 때,
+# 첫번째는 이상치를 가지고 있을 때 사용하는 게 유용하다
+# 이상치라면, 표준정규분포로 정규화하여도 이상치로 남아 있게 된다
+# 
 # 두번째와 세번째는 이상치가 없을 때 사용하는 게 유용하다
+# 평균으로부터 얼마나 떨어져 있는지의 정보가 비교적 잘 반영되어 있다  
 #
 
 interests <- teens[5:40]
+sapply(interests, max) 
+
+#
+# 어떤 단어는 사용빈도가 높고, 어떤 단어는 사용빈도가 낮음(변수마다 스케일이 다름)
+# swimimg의 최대발생빈도는 9, blonde의 최대발생빈도는 327 
+# 정규화 해주지 않으면 swimimg의 1 차이와 blonde의 1 차이가 다른 의미를 가짐에도,
+# 같은 차이로 취급될 것이다
+#
+
 interests_z <- as.data.frame(lapply(interests, scale)) # 표준정규분포화 시켜준다
 interests_z
 set.seed(1234)
@@ -143,4 +161,5 @@ aggregate(data = teens, female ~ cluster, mean)
 # 각 클러스터별로 친구 수 구하기
 aggregate(data = teens, friends ~ cluster, mean)
 
-aggregate(data = teens, soccer ~ cluster, mean)
+# 클러스터별 가장 많이 사용한 단어 구하기
+apply(teen_clusters$centers, 1, function(x) names(x)[order(x)])

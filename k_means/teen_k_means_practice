@@ -1,0 +1,46 @@
+library(tidyverse)
+library(ggplot2)
+
+teens <- read.csv("C:/data_mining/k_means/snsdata.csv")
+
+str(teens)
+
+sapply(teens, summary)
+sapply(teens, table, useNA='ifany')
+
+teens$Male <- ifelse(!is.na(teens$gender) & teens$gender == "M", 1, 0)
+table(teens$Male)
+table(teens$gender, useNA='ifany')
+
+teens$Female <- ifelse(!is.na(teens$gender) & teens$gender == "F", 1, 0)
+
+teens$age <- ifelse(13 <= teens$age & teens$age <= 20, teens$age, NA)
+
+aggregate(age~gradyear, teens, mean, na.rm=T)
+
+# FUN 옵션 무조건 써줘야 한다
+ave_age <- ave(teens$age, teens$gradyear, FUN=function(x) mean(x, na.rm = TRUE))
+teens$age <- ifelse(is.na(teens$age), ave_age, teens$age)
+
+str(teens)
+
+kteens <- teens %>% select(-gradyear, -gender)
+kteens$age <- kteens$age - min(kteens$age)
+kteens$friends <- (kteens$friends) / max(kteens$friends)
+
+for(i in 3:ncol(kteens)){
+    kteens[,i] <- kteens[,i]/max(kteens[,i])
+}
+
+str(kteens)
+summary(kteens$age)
+
+age_propered <- kteens
+cluster <- kmeans(kteens, 3)
+cluster$centers
+
+apply(cluster$centers, 1, function(x) names(x)[order(x)])
+cluster$cluster
+kteens$clusters <- cluster$cluster
+aggregate(data=kteens, Female~clusters, mean)
+kteens$clusters[1:5]
