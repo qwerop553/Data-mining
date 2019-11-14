@@ -53,3 +53,9 @@
 # 기하급수적인 메모리가 필요하다고 한다.
 
 # Naive?  그냥 독립이라고 가정해버림 => P(A n B) = P(A)P(B)
+#
+#
+#
+#
+우도 등의 자세한 설명은
+https://ratsgo.github.io/statistics/2017/07/01/bayes/ 를 참조하면 좋을 것 같습니다.
