@@ -22,6 +22,9 @@
 # 검증/테스트 데이터를 따로 남겨두는 방식을 홀드아웃 방법이라고 함
 
 # 난수를 이용하는 방법
+library(caret)
+
+credit <- read.csv("../decision_tree/german.csv")
 random_ids <- order(runif(1000))
 credit_train <- credit[random_ids[1:500],]
 credit_validate <- credit[random_ids[501:750],]
@@ -29,7 +32,7 @@ credit_test <- credit[random_ids[751:1000],]
 
 in_train <- createDataPartition(credit$default, p = 0.75, list=FALSE)
 credit_train <- credit[in_train,]
-creidt_test <- credit[-in_train,]
+credit_test <- credit[-in_train,]
 
 # k-fold Cross Validation
 # training set, validation set, test set으로 나누게 되면
@@ -54,9 +57,12 @@ cv_results <- lapply(folds, function(x){
   credit_model <- C50::C5.0(as.factor(default)~., data=credit_train)
   credit_pred <- predict(credit_model, credit_test)
   credit_actual <- credit_test$default
-  rslt <- table(credit_test$answer, credit_pred)
+  rslt <- table(credit_test$default, credit_pred)
   pr_a <- sum(diag(rslt)) / sum(rslt)
-  pr_e <- sum((diag(rslt) / rowSums(rslt)) * (diag(rslt) / colSums(rslt)))
+  pr_e <- sum(colSums(rslt) * rowSums(rslt) / sum(rslt) ^ 2)
   kappa = (pr_a - pr_e) / (1 - pr_e)
   return(kappa)
 })
+
+mean(unlist(cv_results))
+
