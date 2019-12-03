@@ -9,8 +9,12 @@ library(gmodels)
 
 setwd("./naive_bayse")
 sms_raw <- read.csv("sms_spam.csv", encoding="UTF-8")
-
+which(!(sms_raw$type %in% c("spam", "ham")))
+sms_raw[1072,]
+sms_raw <- sms_raw[-1072,]
+sms_raw$type <- factor(sms_raw$type, levels = c("ham", "spam"))
 table(sms_raw$type)
+
 
 # create train corpus and refine
 sms_corpus_clean <- Corpus(VectorSource(sms_raw$text)) %>%
@@ -126,7 +130,7 @@ caret::specificity(sms_results$predict_type, sms_results$actual_type, negative="
 # 연속되는 선으로 표현할 수 있을 것입니다.
 # 이 알고리즘이 만들어낸 선이 얼마나 붙어 있는지 확인해 보면
 # 이 알고리즘일 얼마나 좋은지 확인해 볼 수 있음
-# 테스트 분류기 아래의 면적을 AUC (Area Under the Curve) 라 ㅎ함
+# 테스트 분류기 아래의 면적을 AUC (Area Under the Curve) 라고 함
 # AUC 로 트레이드오프 관계를 보는듯..?
 # 0.5 <= 1
 
@@ -141,3 +145,8 @@ sms_test_prob[,2]
 # prediction() 함수는 예측값에 대한 성능 평과결과가 가지고 있음
 # 여기에 performance() 함수를 씌우면 다양한 metric 관점으로 성능 평가를 할 수 있음 
 perf <- performance(pred, measure = 'tpr', x.measure = 'fpr')
+perf
+
+plot(perf, main = "ROC curve for SMS spam filter", col='blue', lwd=2)
+perf.auc <- performance(pred, measure='auc')
+perf.auc
